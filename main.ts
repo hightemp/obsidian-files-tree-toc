@@ -71,7 +71,8 @@ export default class TOCFilesPlugin extends Plugin {
 	fnGenerateList(aFiles: any, sPath="", iLevel=0) {
 		let sTOC = ""
 		for (const sFile of aFiles.files) {
-			sTOC += "  ".repeat(iLevel) + " - " + `[${sFile}](${sPath+"/"+sFile})` + "\n"
+			const sP = encodeURI(`${sPath+"/"+sFile}`)
+			sTOC += "  ".repeat(iLevel) + " - " + `[${sFile}](${sP})` + "\n"
 		}
 		for (const [sFile, oFile] of Object.entries(aFiles.folders)) {
 			sTOC += "  ".repeat(iLevel) + " - " + sFile + "\n"
