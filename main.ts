@@ -121,6 +121,10 @@ export default class TOCFilesPlugin extends Plugin {
 
 		this.fnGenerateTOC()
 
+		this.registerEvent(this.app.vault.on('rename', (file) => {
+			this.fnGenerateTOC()
+		}));
+
 		this.registerEvent(this.app.vault.on('create', (file) => {
 			this.fnGenerateTOC()
 		}));
