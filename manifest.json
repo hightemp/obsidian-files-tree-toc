@@ -5,7 +5,7 @@
 	"minAppVersion": "0.15.0",
 	"description": "Obsidian plugin - table of contents(TOC) for files",
 	"author": "hightemp",
-	"authorUrl": "",
-	"fundingUrl": "",
+	"authorUrl": "https://github.com/hightemp/obsidian-files-tree-toc",
+	"fundingUrl": "https://github.com/hightemp/obsidian-files-tree-toc",
 	"isDesktopOnly": false
 }

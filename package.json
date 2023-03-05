@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
 		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-		"version": "node version-bump.mjs && git add manifest.json versions.json"
+		"version": "node version-bump.mjs && git add manifest.json versions.json",
+		"release": "gh release create $(node -p \"require('./package.json').version\") --notes \"release\" manifest.json main.js styles.css"
 	},
 	"keywords": [],
 	"author": "",
