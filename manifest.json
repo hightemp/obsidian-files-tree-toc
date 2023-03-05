@@ -4,8 +4,8 @@
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
 	"description": "Obsidian plugin - table of contents(TOC) for files",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"author": "hightemp",
+	"authorUrl": "",
+	"fundingUrl": "",
 	"isDesktopOnly": false
 }
