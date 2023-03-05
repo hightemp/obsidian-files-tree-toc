@@ -1,0 +1,11 @@
+{
+	"id": "obsidian-files-tree-toc",
+	"name": "Obsidian plugin - TOC for files",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Obsidian plugin - TOC for files",
+	"author": "Obsidian",
+	"authorUrl": "https://obsidian.md",
+	"fundingUrl": "https://obsidian.md/pricing",
+	"isDesktopOnly": false
+}
