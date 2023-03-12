@@ -1,5 +1,7 @@
 # Obsidian files table of contents
 
+![](https://asdertasd.site/counter/obsidian-files-tree-toc)
+
 Obsidian plugin for generating TOC for files
 
 - Create file example `READEME.md`
