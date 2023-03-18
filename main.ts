@@ -2,17 +2,22 @@ import {
 	App, Editor, MarkdownView,
 	Modal, Notice, Plugin,
 	PluginSettingTab, Setting,
-	TFile, TFolder
+	TFile, TFolder,
+	TAbstractFile
 } from 'obsidian';
 
 // Remember to rename these classes and interfaces!
 
 interface TOCFilesPluginSettings {
 	sTOCFileName: string;
+	sBasePath: string;
+	sHistoryFileName: string;
 }
 
 const DEFAULT_SETTINGS: TOCFilesPluginSettings = {
-	sTOCFileName: 'README.md'
+	sTOCFileName: 'README.md',
+	sBasePath: './',
+	sHistoryFileName: '',
 }
 
 export default class TOCFilesPlugin extends Plugin {
@@ -71,7 +76,8 @@ export default class TOCFilesPlugin extends Plugin {
 	fnGenerateList(aFiles: any, sPath="", iLevel=0) {
 		let sTOC = ""
 		for (const sFile of aFiles.files) {
-			const sP = encodeURI(`${sPath+"/"+sFile}`)
+			let sP = this.settings.sBasePath.replace(/\/$/, "") + "/";
+			sP = sP+encodeURI(`${sPath+"/"+sFile}`).replace(/^\//, "")
 			sTOC += "  ".repeat(iLevel) + " - " + `[${sFile}](${sP})` + "\n"
 		}
 		for (const [sFile, oFile] of Object.entries(aFiles.folders)) {
@@ -87,14 +93,14 @@ export default class TOCFilesPlugin extends Plugin {
 
 		const sTOCFileName = this.settings.sTOCFileName;
 		const file = this.app.vault.getAbstractFileByPath(sTOCFileName);
-		// const files = await this.fnGetFileTree()
-		const rfiles = await this.getFilesRecursively()
-
-		let sTOCContent = "";
-
-		sTOCContent = this.fnGenerateList(rfiles)
-
 		if (file instanceof TFile) {
+			// const files = await this.fnGetFileTree()
+			const rfiles = await this.getFilesRecursively()
+
+			let sTOCContent = "";
+
+			sTOCContent = this.fnGenerateList(rfiles)
+
 			let content = await this.app.vault.read(file);
 
 			sTOCContent = `<!-- TOC -->\n${sTOCContent}\n<!-- TOC -->`
@@ -103,6 +109,56 @@ export default class TOCFilesPlugin extends Plugin {
 		} else {
 			console.error(`${sTOCFileName} is not a file`);
 		}
+	}
+
+	async getFilesListOrderedByTime(): Promise<TFile[]> {
+		let files = await window.app.vault.getMarkdownFiles();
+
+		files = files.filter((o) => 
+			!~[this.settings.sTOCFileName, this.settings.sHistoryFileName].indexOf(o.basename)
+		)
+		files.sort((a, b) => b.stat.mtime - a.stat.mtime);
+
+		return files
+	}
+
+	fnGenerateHistoryList(aFiles: TFile[]): string {
+		let sTOC = "";
+
+		for (const oFile of aFiles) {
+			let sP = this.settings.sBasePath.replace(/\/$/, "") + "/";
+			sP = sP+encodeURI(`${oFile.path}`).replace(/^\//, "")
+			sTOC += " - " + `[${oFile.path}](${sP})` + "\n"
+		}
+
+		return sTOC;
+	}
+
+	async fnGenerateHistoryTable() {
+		const sHistoryFileName = this.settings.sHistoryFileName;
+		const file = this.app.vault.getAbstractFileByPath(sHistoryFileName);
+
+		if (file instanceof TFile) {
+			// const files = await this.fnGetFileTree()
+			const rfiles = await this.getFilesListOrderedByTime()
+
+			let sTOCContent = "";
+
+			sTOCContent = this.fnGenerateHistoryList(rfiles)
+
+			let content = await this.app.vault.read(file);
+
+			sTOCContent = `<!-- HTOC -->\n${sTOCContent}\n<!-- HTOC -->`
+			content = content.replace(/<!-- HTOC -->([^]*?)<!-- HTOC -->/, sTOCContent)
+			this.app.vault.modify(file, content)
+		} else {
+			console.error(`${sHistoryFileName} is not a file`);
+		}
+	}
+	
+	async fnGenerate() {
+		this.fnGenerateTOC();
+		this.fnGenerateHistoryTable();
 	}
 
 	async onload() {
@@ -119,18 +175,15 @@ export default class TOCFilesPlugin extends Plugin {
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 
-		this.fnGenerateTOC()
+		this.fnGenerate()
 
-		this.registerEvent(this.app.vault.on('rename', (file) => {
-			this.fnGenerateTOC()
-		}));
-
-		this.registerEvent(this.app.vault.on('create', (file) => {
-			this.fnGenerateTOC()
-		}));
-
-		this.registerEvent(this.app.vault.on('delete', (file) => {
-			this.fnGenerateTOC()
+		this.registerEvent(this.app.vault.on('rename', (file) => this.fnGenerate()));
+		this.registerEvent(this.app.vault.on('create', (file) => this.fnGenerate()));
+		this.registerEvent(this.app.vault.on('delete', (file) => this.fnGenerate()));
+		this.registerEvent(this.app.vault.on('modify', (file) => {
+			if (!~[this.settings.sTOCFileName, this.settings.sHistoryFileName].indexOf(file.name)) {
+				this.fnGenerate();
+			}
 		}));
 	}
 
@@ -184,6 +237,28 @@ class SampleSettingTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.sTOCFileName)
 				.onChange(async (value) => {
 					this.plugin.settings.sTOCFileName = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Base path')
+			.setDesc('')
+			.addText(text => text
+				.setPlaceholder('./')
+				.setValue(this.plugin.settings.sBasePath)
+				.onChange(async (value) => {
+					this.plugin.settings.sBasePath = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('File with files changes history table')
+			.setDesc('')
+			.addText(text => text
+				.setPlaceholder('HISTORY.md')
+				.setValue(this.plugin.settings.sHistoryFileName)
+				.onChange(async (value) => {
+					this.plugin.settings.sHistoryFileName = value;
 					await this.plugin.saveSettings();
 				}));
 	}

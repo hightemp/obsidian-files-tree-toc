@@ -11,5 +11,10 @@ Obsidian plugin for generating TOC for files
 <!-- TOC -->
 <!-- TOC -->
 ```
+- Add to file this block for history changes of files list
+```
+<!-- HTOC -->
+<!-- HTOC -->
+```
 
 ![](./images/2023-03-05_16-20.png)
